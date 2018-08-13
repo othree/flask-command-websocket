@@ -1,14 +1,19 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask_sockets import Sockets
 
 import subprocess 
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='www', static_url_path='/static')
 sockets = Sockets(app)
 
 
-@sockets.route('/echo')
+app.add_url_rule(
+    app.static_url_path + '/<path:filename>',
+    endpoint='static', view_func=app.send_static_file)
+
+
+@sockets.route('/job')
 def echo_socket(ws):
     while not ws.closed:
         ws.receive()
@@ -26,11 +31,9 @@ def echo_socket(ws):
 
 @app.route('/')
 def hello_world():
-    return 'Hello, World!'
+    return app.send_static_file('index.html')
 
 
-if __name__ == "__main__":
-    from gevent import pywsgi
-    from geventwebsocket.handler import WebSocketHandler
-    server = pywsgi.WSGIServer(('', 5000), app, handler_class=WebSocketHandler)
-    server.serve_forever()
+# @app.route('/<path:filename>')  
+# def send_file(filename):  
+    # return send_from_directory(app.static_folder, filename)
