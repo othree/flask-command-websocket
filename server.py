@@ -18,8 +18,7 @@ def echo_socket(ws):
     while not ws.closed:
         ws.receive()
         
-        # https://apple.stackexchange.com/questions/98106/how-to-produce-constant-output-in-a-terminal-window
-        cmd = ["hexdump", "-C", "/dev/urandom", "|", "GREP_COLOR='1;32'", "grep", "--color=auto", "'ca fe'"]
+        cmd = ["./run.sh"]
 
         p = subprocess.Popen(cmd,
                              stdout=subprocess.PIPE,
@@ -28,12 +27,11 @@ def echo_socket(ws):
         for line in iter(p.stdout.readline, b''):
             ws.send(">>> " + line.rstrip())
 
+        rc = p.returncode
+        ws.send("[return code] %d" % rc)
+
 
 @app.route('/')
 def hello_world():
     return app.send_static_file('index.html')
 
-
-# @app.route('/<path:filename>')  
-# def send_file(filename):  
-    # return send_from_directory(app.static_folder, filename)
